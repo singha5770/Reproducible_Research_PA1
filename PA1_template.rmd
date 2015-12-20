@@ -1,0 +1,89 @@
+---
+title: "PA1_template"
+output: html_document
+---
+
+Reproducible research: Programming assignment1
+
+Loading and preprocessing the data
+
+```{r, echo=TRUE}
+setwd("C:/Users/aman/Documents/Courses/Coursera/Data Science specialization/5- Reproducable Research/R working directory- Reproducable research/Assignment1")
+
+dat<- read.csv("activity.csv", header = T, stringsAsFactors = F,na.strings = "NA")
+````
+
+What is mean total number of steps taken per day?
+
+```{r, echo=TRUE}
+##1
+tabData <- tapply(dat$steps, dat$date, sum)
+
+hist(tabData, xlab = "Number of steps per day", ylab = "Frequency", main = "Frequency of number of steps taken per day")
+
+mean(tabData, na.rm = T)
+
+median(tabData, na.rm = T)
+````
+
+What is the average daily activity pattern?
+
+```{r, echo=TRUE}
+avgData<- aggregate(steps~interval,dat, mean, na.rm = T )
+
+plot(avgData$interval, avgData$steps, type = "l", main = "Steps vs Interval (Daily Avg)", ylab = "Avg steps", xlab = "Interval")
+
+avgData[avgData$steps == max(avgData$steps), ]
+````
+
+Imputing missing values
+
+```{r, echo=TRUE}
+sum(is.na(dat))
+
+newData <- dat
+
+for (i in 1: nrow(newData)){
+    if(is.na(newData$steps[i])){
+      newData$steps[i]= avgData[avgData$interval == newData$interval[i], "steps"]
+    }}
+
+newHist <- tapply(newData$steps, newData$date, sum)
+
+hist(newHist)
+
+##new mean
+mean(newHist)
+
+##old mean
+mean(tabData, na.rm = T)
+
+##new median
+median(newHist)
+
+##old median
+median(tabData, na.rm = T)
+
+##There has been no difference between the mean values. But, the median shifted closer to the mean and the median is same as mean.
+
+##The shape of the histogram remains same but the frequency counts increased.
+````
+
+Are there differences in activity patterns between weekdays and weekends?
+
+```{r, echo=TRUE}
+wd<- newData
+
+wd$d= weekdays(strptime(wd$date,format = "%Y-%m-%d"))
+
+wd$DayOfWeek <- as.factor(ifelse(wd$d =="Saturday"|wd$d== "Sunday","Weekend","Weekday"))
+
+awd<- aggregate(steps~interval+DayOfWeek, wd, mean )
+
+library(lattice)
+
+xyplot(steps~interval| DayOfWeek, awd, layout= c(1,2), type = "l", main = "Average number of steps taken by interval", ylab = "Average number of steps taken")
+
+##Yes it seems there is a lot of difference between weekdays and weekends.
+
+```
